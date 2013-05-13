@@ -47,7 +47,7 @@ define('DOOFINDER_CHUNK_SIZE', 1000);
 
 class DoofinderFeed
 {
-  const VERSION = "1.0.0";
+  const VERSION = "1.0.1";
 
   protected $_iLimit;
 
@@ -211,11 +211,18 @@ class DoofinderFeed
     $feeds = array();
 
     foreach (self::getAvailableLanguages() as $lang)
-      $feeds[$lang->code] = $rootUrl . "?language=".$lang->code;
+    {
+      $feeds[] = array(
+        "id" => $lang->id,
+        "code" => $lang->code,
+        "url" => $rootUrl . "?language=".$lang->code,
+        "length" => self::countAvailableProductsFor($lang->code)
+      );
+    }
 
     echo json_encode(array(
       'platform' => array(
-        'name' => 'oscommerce',
+        'name' => 'osCommerce',
         'version' => tep_get_version()
       ),
       'module' => array(
@@ -526,6 +533,18 @@ class DoofinderFeed
     return $langs;
   }
 
+  public static function countAvailableProductsFor($languageCode)
+  {
+    $languageId = self::getLanguageIdFromCode($languageCode);
+    $db_query = tep_db_query(self::sqlForProducts($languageId, true));
+    $result = self::tep_db_fetch_obj($db_query);
+
+    if ($result)
+      return $result->total;
+
+    return 0;
+  }
+
   /**
    * Returns a language ID from a language ISO code.
    *
@@ -565,7 +584,7 @@ class DoofinderFeed
 
   // Request
 
-  public static function cfg($name, $default, $length=null)
+  public static function req($name, $default, $length=null)
   {
     if (!isset($_GET[$name]) || ($length !== null && strlen($_GET[$name]) != $length))
       return $default;
@@ -573,7 +592,7 @@ class DoofinderFeed
     return tep_db_prepare_input($_GET[$name]);
   }
 
-  public static function cfgInt($name, $default)
+  public static function reqInt($name, $default)
   {
     if (!isset($_GET[$name]))
       return $default;
@@ -761,17 +780,17 @@ class DoofinderFeed
 
 // doofinder.php?config=1
 
-if (DoofinderFeed::cfgInt('config', 0))
+if (DoofinderFeed::reqInt('config', 0))
   DoofinderFeed::outputConfig();
 
 // doofinder.php?prices=1&taxes=0&language=en&currency=eur
 
 $feed = new DoofinderFeed(
-  DoofinderFeed::cfg('language', DOOFINDER_LANGUAGE),
-  DoofinderFeed::cfg('currency', DOOFINDER_CURRENCY),
-  DoofinderFeed::cfgInt('chunk_size', DOOFINDER_CHUNK_SIZE),
-  DoofinderFeed::cfgInt('prices', DOOFINDER_SHOW_PRICES),
-  DoofinderFeed::cfgInt('taxes', DOOFINDER_SHOW_FINAL_PRICES)
+  DoofinderFeed::req('language', DOOFINDER_LANGUAGE),
+  DoofinderFeed::req('currency', DOOFINDER_CURRENCY),
+  DoofinderFeed::reqInt('chunk_size', DOOFINDER_CHUNK_SIZE),
+  DoofinderFeed::reqInt('prices', DOOFINDER_SHOW_PRICES),
+  DoofinderFeed::reqInt('taxes', DOOFINDER_SHOW_FINAL_PRICES)
 );
 
 $feed->outputFeed();
