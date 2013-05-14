@@ -49,7 +49,8 @@ class DoofinderFeed
 {
   const VERSION = "1.0.1";
 
-  protected $_iLimit;
+  protected $_aLimit;
+  protected $_iChunkSize;
 
   protected $_sSepField;
   protected $_sSepCategory;
@@ -80,7 +81,7 @@ class DoofinderFeed
                               $showPrices = DOOFINDER_SHOW_PRICES,
                               $showFinalPrices = DOOFINDER_SHOW_FINAL_PRICES)
   {
-    $this->_iLimit = $chunkSize;
+    $this->_iChunkSize = $chunkSize;
 
     $this->_sSepField = "|";
     $this->_sSepCategory = "/";
@@ -94,6 +95,18 @@ class DoofinderFeed
 
     $this->_sProductURL = FILENAME_PRODUCT_INFO;
     $this->_sProductURLParams = "currency=" . $this->_sCurrencyCode . "&products_id=";
+  }
+
+  /**
+   * If this function is called then the results will be limited to $limit
+   * starting from the zero-based position indicated by $offset.
+   * @param integet Max results
+   * @param integer Starting from
+   */
+  public function setLimit($limit, $offset)
+  {
+    $this->_aLimit = array('limit' => $limit, 'offset' => $offset);
+    $this->_iChunkSize = $limit;
   }
 
   //
@@ -122,17 +135,36 @@ class DoofinderFeed
 
     // Header
 
-    echo implode($this->_sSepField, $this->_csvHeaderFields()).PHP_EOL;
-    flush();ob_flush();
+    if (!$this->_aLimit || $this->_aLimit['offset'] === 0)
+    {
+      // If the query is not limited or, if so, we are retrieving the beginning
+
+      echo implode($this->_sSepField, $this->_csvHeaderFields()).PHP_EOL;
+      flush();ob_flush();
+    }
 
     // Products
-    $offset = 0;
-    $nbRows = $this->_countProducts();
+
+    if (!$this->_aLimit)
+    {
+      // All products
+
+      $offset0 = 0;
+      $nbRows = $this->_countProducts();
+    }
+    else
+    {
+      // Limit the number of rows and start from $offset.
+
+      $offset0 = $this->_aLimit['offset'];
+      $nbRows = $this->_aLimit['limit'];
+    }
+
     $FS = $this->_sSepField;
 
-    for ($offset = 0; $offset < $nbRows; $offset += $this->_iLimit)
+    for ($offset = $offset0; $offset < $nbRows; $offset += $this->_iChunkSize)
     {
-      $db_query = tep_db_query(self::sqlForProducts($this->_iLanguageId, false, $this->_iLimit, $offset));
+      $db_query = tep_db_query(self::sqlForProducts($this->_iLanguageId, false, $this->_iChunkSize, $offset));
 
       while ($product = self::tep_db_fetch_obj($db_query))
       {
@@ -792,5 +824,11 @@ $feed = new DoofinderFeed(
   DoofinderFeed::reqInt('prices', DOOFINDER_SHOW_PRICES),
   DoofinderFeed::reqInt('taxes', DOOFINDER_SHOW_FINAL_PRICES)
 );
+
+$limit = DoofinderFeed::reqInt('limit', 0);
+$offset = DoofinderFeed::reqInt('offset', 0);
+
+if ($limit > 0)
+  $feed->setLimit($limit, $offset);
 
 $feed->outputFeed();
