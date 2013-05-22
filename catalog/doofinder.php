@@ -30,6 +30,21 @@
  *       http://creativecommons.org/licenses/by-nc-sa/3.0/
  */
 
+/**
+ * Accepted parameters:
+ *
+ * - limit:      Max results in this request.
+ * - offset:     Zero-based position to start getting results.
+ * - chunk_size: The same as limit if limit is not present but for the
+ *               "all results" mode
+ * - language:   Language ISO code, like "es" or "en"
+ * - currency:   Currency ISO code, like "EUR" or "GBP"
+ *
+ * - prices:     0 to hide prices (default: 1)
+ * - taxes:      0 to not include taxes in prices (default: 1)
+ */
+
+
 include_once 'includes/application_top.php';
 
 // =============================================================== CONFIGURATION
@@ -44,6 +59,29 @@ define('DOOFINDER_SHOW_FINAL_PRICES', true);
 define('DOOFINDER_CHUNK_SIZE', 1000);
 
 // =============================================================== DO NOT EDIT!!
+
+if (! function_exists('tep_get_version'))
+{
+  function tep_get_version()
+  {
+    if (!defined('PROJECT_VERSION'))
+      return "UNKNOWN";
+
+    preg_match('/v((\d+\.\d+(\.\d+)?)(\s.*)?)$/', PROJECT_VERSION, $matches);
+
+    if (!empty($matches[2]))
+    {
+      // RC versions are faked as 2.3.0
+      if ($matches[2] == "2.2" && !empty($matches[4]) && \
+          strpos(trim($matches[4]), "RC") === 0)
+        return "2.3.0";
+
+      return $matches[2];
+    }
+
+    return "UNKNOWN";
+  }
+}
 
 class DoofinderFeed
 {
