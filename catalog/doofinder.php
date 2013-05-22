@@ -85,7 +85,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.0.1";
+  const VERSION = "1.0.2";
 
   protected $_aLimit;
   protected $_iChunkSize;
