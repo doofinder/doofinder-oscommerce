@@ -85,7 +85,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.0.2";
+  const VERSION = "1.0.3";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -248,7 +248,7 @@ class DoofinderFeed
             echo $FS;
 
           // sale_price
-          $sale_price = $this->getPrice($product->sale_price, self::clean($product->tax_rate)).$FS;
+          $sale_price = $this->getPrice($product->sale_price, self::clean($product->tax_rate));
 
           if ($sale_price > 0)
             echo $sale_price.$FS;
