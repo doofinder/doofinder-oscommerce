@@ -85,7 +85,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.0.3";
+  const VERSION = "1.0.4";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -636,9 +636,14 @@ class DoofinderFeed
 
   public static function clean($text)
   {
+    // http://stackoverflow.com/questions/4224141/php-removing-invalid-utf-8-characters-in-xml-using-filter
+    $valid_utf8 = '/([\x09\x0A\x0D\x20-\x7E]|[\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|\xED[\x80-\x9F][\x80-\xBF]|\xF0[\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|\xF4[\x80-\x8F][\x80-\xBF]{2})|./x';
+
     $text = strip_tags(html_entity_decode($text, ENT_QUOTES, 'UTF-8'));
+    $text = preg_replace('/[ ]{2,}/', ' ', $text);
     $text = str_replace(array(chr(9), chr(10)), " ", $text);
-    return trim(preg_replace('/[\t\s]+|[|\r\n]/', " ", $text));
+
+    return preg_replace($valid_utf8, '$1', $text);
   }
 
   public static function cleanReferences($text)
