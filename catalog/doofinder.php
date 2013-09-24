@@ -85,7 +85,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.0.4";
+  const VERSION = "1.1.0";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -122,7 +122,7 @@ class DoofinderFeed
     $this->_iChunkSize = $chunkSize;
 
     $this->_sSepField = "|";
-    $this->_sSepCategory = "/";
+    $this->_sSepCategory = "%%";
     $this->_sSepSubcategory = ">";
 
     $this->_iLanguageId = self::getLanguageIdFromCode($languageCode);
@@ -169,7 +169,7 @@ class DoofinderFeed
     $this->_prepareCategories();
     $this->_prepareCurrencyConversion();
 
-    header("Content-Type: text/plain; charset=utf-8");
+    header("Content-Type: text/plain");
 
     // Header
 
@@ -275,20 +275,12 @@ class DoofinderFeed
    */
   public static function outputConfig()
   {
-    header("Content-Type: application/json; charset=utf-8");
+    header("Content-Type: application/json");
 
-    $rootUrl = HTTP_SERVER . DIR_WS_CATALOG . basename(__FILE__);
-    $feeds = array();
+    $languages = array();
 
     foreach (self::getAvailableLanguages() as $lang)
-    {
-      $feeds[] = array(
-        "id" => $lang->id,
-        "code" => $lang->code,
-        "url" => $rootUrl . "?language=".$lang->code,
-        "length" => self::countAvailableProductsFor($lang->code)
-      );
-    }
+      $languages[] = strtoupper($lang->code);
 
     echo json_encode(array(
       'platform' => array(
@@ -297,7 +289,13 @@ class DoofinderFeed
       ),
       'module' => array(
         'version' => self::VERSION,
-        'feeds' => $feeds
+        'feed' => HTTP_SERVER . DIR_WS_CATALOG . basename(__FILE__),
+        'options' => array (
+          'language' => $languages,
+          'currency' => self::getAvailableCurrencies(),
+          'prices' => true,
+          'taxes' => true
+        )
       )
     ));
 
@@ -581,7 +579,7 @@ class DoofinderFeed
     $db_query = tep_db_query(self::sqlForCurrencyCode());
 
     while ($row = self::tep_db_fetch_obj($db_query))
-      $codes[] = $row->code;
+      $codes[] = strtoupper($row->code);
 
     return $codes;
   }
@@ -670,10 +668,32 @@ class DoofinderFeed
 
   public static function reqInt($name, $default)
   {
-    if (!isset($_GET[$name]))
+    if (!isset($_GET[$name]) || !strlen($_GET[$name]))
       return $default;
 
     return tep_db_prepare_input(intval($_GET[$name]));
+  }
+
+  public static function reqBool($name, $default=false)
+  {
+    if (!isset($_GET[$name]) || !strlen($_GET[$name]))
+      return $default;
+
+    switch (strtoupper($_GET[$name]))
+    {
+      case 'TRUE':
+      case 'YES':
+      case 'ON':
+        return true;
+
+      case 'FALSE':
+      case 'NO':
+      case 'OFF':
+        return false;
+
+      default:
+        return (bool) $_GET[$name];
+    }
   }
 
   //
@@ -856,7 +876,7 @@ class DoofinderFeed
 
 // doofinder.php?config=1
 
-if (DoofinderFeed::reqInt('config', 0))
+if (DoofinderFeed::reqBool('config', false))
   DoofinderFeed::outputConfig();
 
 // doofinder.php?prices=1&taxes=0&language=en&currency=eur
@@ -865,8 +885,8 @@ $feed = new DoofinderFeed(
   DoofinderFeed::req('language', DOOFINDER_LANGUAGE),
   DoofinderFeed::req('currency', DOOFINDER_CURRENCY),
   DoofinderFeed::reqInt('chunk_size', DOOFINDER_CHUNK_SIZE),
-  DoofinderFeed::reqInt('prices', DOOFINDER_SHOW_PRICES),
-  DoofinderFeed::reqInt('taxes', DOOFINDER_SHOW_FINAL_PRICES)
+  DoofinderFeed::reqBool('prices', DOOFINDER_SHOW_PRICES),
+  DoofinderFeed::reqBool('taxes', DOOFINDER_SHOW_FINAL_PRICES)
 );
 
 $limit = DoofinderFeed::reqInt('limit', 0);

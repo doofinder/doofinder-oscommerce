@@ -11,5 +11,6 @@ cp -r catalog doofinder
 # cp *.tpl doofinder
 # cp -r css doofinder
 cp README.md doofinder
-zip -r doofinder-v$1.zip doofinder
+zip -r doofinder-osc-v$1.zip doofinder
+cp doofinder-osc-v$1.zip doofinder-osc-latest.zip
 rm -Rf doofinder
