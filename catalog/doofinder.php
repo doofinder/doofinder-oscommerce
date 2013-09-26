@@ -85,7 +85,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.1.0";
+  const VERSION = "1.1.1";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -278,9 +278,18 @@ class DoofinderFeed
     header("Content-Type: application/json");
 
     $languages = array();
+    $configurations = array();
 
     foreach (self::getAvailableLanguages() as $lang)
-      $languages[] = strtoupper($lang->code);
+    {
+      $lang = strtoupper($lang->code);
+      $languages[] = $lang;
+      $configurations[$lang] = array(
+        'language' => $lang,
+        'prices' => true, // TODO(@carlosescri): Make configurable.
+        'taxes' => true,  // TODO(@carlosescri): Make configurable.
+      );
+    }
 
     echo json_encode(array(
       'platform' => array(
@@ -293,9 +302,8 @@ class DoofinderFeed
         'options' => array (
           'language' => $languages,
           'currency' => self::getAvailableCurrencies(),
-          'prices' => true,
-          'taxes' => true
-        )
+        ),
+        'configurations' => $configurations,
       )
     ));
 
