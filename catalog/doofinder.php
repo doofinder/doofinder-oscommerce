@@ -47,7 +47,7 @@
  */
 
 
-require_once 'encoding.php';
+require_once 'doofinder-encoding.php';
 include_once 'includes/application_top.php';
 
 define('DF_TXT_SEPARATOR', '|');
