@@ -93,7 +93,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.1.4";
+  const VERSION = "1.1.5";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -688,6 +688,7 @@ class DoofinderFeed
     }
 
     $text = trim($text);
+    $text = preg_replace('/^["\']+/', '', $text); // remove first quotes
 
     return Encoding::encode($this->_encoding, $text);
   }
