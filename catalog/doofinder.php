@@ -663,7 +663,7 @@ class DoofinderFeed
     $text = preg_replace('/&#(\d+);/me',"chr(\\1)",$text);  // decimal notation
     $text = preg_replace('/&#x([a-f0-9]+);/mei',"chr(0x\\1)",$text);  // hex notation
     $text = str_replace("><", "> <", $text);
-    $text = preg_replace('/\<br(\s*)?\/?\>/i', $blank, $text);
+    $text = preg_replace('/\<br(\s*)?\/?\>/i', " ", $text);
     $text = strip_tags($text);
 
     return $text;
