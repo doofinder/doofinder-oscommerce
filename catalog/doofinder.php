@@ -93,7 +93,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.1.5";
+  const VERSION = "1.1.6";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -229,13 +229,13 @@ class DoofinderFeed
         echo $productTitle.$FS;
 
         // link
-        echo $this->clean($this->getProductURL($product->id), true).$FS;
+        echo $this->cleanURL($this->getProductURL($product->id)).$FS;
 
         // description
         echo $this->clean($product->description).$FS;
 
         // image_link
-        echo $this->clean($this->getProductImageUrl($product->image_url), true).$FS;
+        echo $this->cleanURL($this->getProductImageUrl($product->image_url)).$FS;
 
         // categories
         echo $this->clean(implode($this->_sSepCategory, $this->_productCategories($product->id))).$FS;
@@ -669,23 +669,46 @@ class DoofinderFeed
     return $text;
   }
 
-  public function clean($text, $is_link = false)
+  public function cleanURL($text)
   {
-    $blank = $is_link ? "" : " ";
-    $sep_r = $is_link ? urlencode(TXT_SEPARATOR) : " - ";
+    $text = trim($text);
+    $text = explode("?", $text);
 
-    $text = str_replace(TXT_SEPARATOR, $sep_r, $text);
-    $text = str_replace(array("\t", "\r", "\n", chr(9), chr(10)), $blank, $text);
+    $baseUrl = array();
+    foreach (explode("/", $text[0]) as $part)
+    {
+      if (in_array(strtolower($part), array('http:', 'https:', '')))
+        $baseUrl[] = $part;
+      else
+        $baseUrl[] = rawurlencode($part);
+    }
+    $text[0] = implode("/", $baseUrl);
 
-    if ($is_link)
+    if (isset($text[1]))
     {
-      $text = str_replace(" ", $blank, $text);
+      $params = array();
+      foreach (explode("&", $text[1]) as $param)
+      {
+        $param = explode("=", $param);
+        foreach ($param as $idx => $part)
+          $param[$idx] = urlencode($part);
+        $params[] = implode("=", $param);
+      }
+      $text[1] = implode('&', $params);
     }
-    else
-    {
-      $text = $this->stripHtml($text);
-      $text = preg_replace('/\s+/', $blank, $text);
-    }
+
+    $text = implode('?', $text);
+
+    return Encoding::encode($this->_encoding, $text);
+  }
+
+  public function clean($text)
+  {
+    $text = str_replace(TXT_SEPARATOR, "-", $text);
+    $text = str_replace(array("\t", "\r", "\n"), " ", $text);
+
+    $text = $this->stripHtml($text);
+    $text = preg_replace('/\s+/', " ", $text);
 
     $text = trim($text);
     $text = preg_replace('/^["\']+/', '', $text); // remove first quotes
