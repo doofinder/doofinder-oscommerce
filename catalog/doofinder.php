@@ -93,7 +93,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.1.7";
+  const VERSION = "1.1.8";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -218,9 +218,6 @@ class DoofinderFeed
 
       while ($product = self::tep_db_fetch_obj($db_query))
       {
-        if ($product->status != 1)
-          continue;
-
         // id
         echo $product->id.$FS;
 
@@ -241,7 +238,7 @@ class DoofinderFeed
         echo $this->clean(implode($this->_sSepCategory, $this->_productCategories($product->id))).$FS;
 
         // availability
-        echo ($product->quantity > 0 ? "in stock" : "out of stock").$FS;
+        echo ($product->status != 1 || $product->quantity == 0 ? "out of stock" : "in stock").$FS;
 
         // brand
         echo $this->clean($product->brand).$FS;
