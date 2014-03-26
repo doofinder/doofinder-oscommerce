@@ -28,6 +28,10 @@
  * ShareAlike 3.0 Unported license:
  *
  *       http://creativecommons.org/licenses/by-nc-sa/3.0/
+ *
+ * SPECIAL THANKS TO:
+ *
+ * José Pastor @ evitrum.com
  */
 
 /**
@@ -93,7 +97,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.1.8";
+  const VERSION = "1.1.9";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -207,7 +211,7 @@ class DoofinderFeed
       // Limit the number of rows and start from $offset.
 
       $offset0 = $this->_aLimit['offset'];
-      $nbRows = $this->_aLimit['limit'];
+      $nbRows = $offset0 + $this->_aLimit['limit'];
     }
 
     $FS = $this->_sSepField;
@@ -701,7 +705,7 @@ class DoofinderFeed
 
   public function clean($text)
   {
-    $text = str_replace(TXT_SEPARATOR, "-", $text);
+    $text = str_replace($this->_sSepField, " ", $text);
     $text = str_replace(array("\t", "\r", "\n"), " ", $text);
 
     $text = $this->stripHtml($text);
@@ -846,6 +850,7 @@ class DoofinderFeed
       " . $extraJoins . "
       WHERE
         pr.products_id=pd.products_id
+        AND pr.products_status=1
         AND pr.products_id=pc.products_id
         AND pd.language_id = " . $languageId . "
       " . $groupBy . "
