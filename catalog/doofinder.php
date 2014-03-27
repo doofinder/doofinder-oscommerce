@@ -31,7 +31,7 @@
  *
  * SPECIAL THANKS TO:
  *
- * José Pastor @ evitrum.com
+ * - José Pastor <jpastor@evitrum.com>
  */
 
 /**
