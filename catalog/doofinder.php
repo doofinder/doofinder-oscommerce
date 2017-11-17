@@ -97,7 +97,7 @@ if (! function_exists('tep_get_version'))
 
 class DoofinderFeed
 {
-  const VERSION = "1.1.9";
+  const VERSION = "1.2.0";
 
   protected $_aLimit;
   protected $_iChunkSize;
@@ -585,7 +585,7 @@ class DoofinderFeed
    * We use this function for convenience and to use the same name convention.
    */
   public static function tep_db_fetch_obj($db_query) {
-    return mysql_fetch_object($db_query);
+    return mysqli_fetch_object($db_query);
   }
 
   /**
